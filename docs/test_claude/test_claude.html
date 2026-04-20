@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test_claude — Task Decomposition Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-main: #f5f4f0;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-light: #999999;
+            --border: #e5e4e0;
+            
+            --c1: #2563eb; /* blue */
+            --c2: #0d9488; /* teal */
+            --c3: #7c3aed; /* violet */
+            --c4: #d97706; /* amber */
+            --c5: #e11d48; /* rose */
+            
+            --layer-user: #e0e7ff;
+            --layer-api: #d1fae5;
+            --layer-core: #ede9fe;
+            --layer-util: #fef08a;
+        }
+
+        body {
+            background: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-badge {
+            background: var(--bg-card);
+            padding: 3px 10px;
+            border-radius: 4px;
+            border-left: 3px solid var(--c1);
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* SECTION STYLES */
+        .section {
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            padding: 20px 24px;
+            border-left: 6px solid var(--c1);
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            background: rgba(37, 99, 235, 0.03);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title:hover {
+            background: rgba(37, 99, 235, 0.06);
+        }
+
+        .section-title.c1 { border-left-color: var(--c1); background: rgba(37, 99, 235, 0.03); }
+        .section-title.c2 { border-left-color: var(--c2); background: rgba(13, 148, 136, 0.03); }
+        .section-title.c3 { border-left-color: var(--c3); background: rgba(124, 58, 237, 0.03); }
+        .section-title.c4 { border-left-color: var(--c4); background: rgba(217, 119, 6, 0.03); }
+        .section-title.c5 { border-left-color: var(--c5); background: rgba(225, 29, 72, 0.03); }
+
+        .section-title.c2:hover { background: rgba(13, 148, 136, 0.06); }
+        .section-title.c3:hover { background: rgba(124, 58, 237, 0.06); }
+        .section-title.c4:hover { background: rgba(217, 119, 6, 0.06); }
+        .section-title.c5:hover { background: rgba(225, 29, 72, 0.06); }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        details[open] .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 24px;
+        }
+
+        /* ARCHITECTURE DIAGRAM */
+        .architecture {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+        }
+
+        .arch-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .layer-box {
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .layer-box:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .layer-user {
+            background: var(--layer-user);
+            border-left-color: var(--c1);
+            color: #1e40af;
+        }
+
+        .layer-api {
+            background: var(--layer-api);
+            border-left-color: var(--c2);
+            color: #065f46;
+        }
+
+        .layer-core {
+            background: var(--layer-core);
+            border-left-color: var(--c3);
+            color: #5b21b6;
+        }
+
+        .layer-util {
+            background: var(--layer-util);
+            border-left-color: var(--c4);
+            color: #92400e;
+        }
+
+        .arch-detail {
+            background: var(--bg-main);
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid var(--c1);
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        .arch-detail.active {
+            display: block;
+        }
+
+        .arch-detail strong {
+            color: var(--text-primary);
+        }
+
+        .arch-detail p {
+            margin: 8px 0;
+        }
+
+        /* WORKFLOW DIAGRAM */
+        .workflow-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .workflow-tab {
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .workflow-tab.active {
+            color: var(--c2);
+            border-bottom-color: var(--c2);
+        }
+
+        .workflow-content {
+            display: none;
+        }
+
+        .workflow-content.active {
+            display: block;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .flow-step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            margin-right: 12px;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        .flow-step-text {
+            flex: 1;
+        }
+
+        .flow-step-text .layer-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            margin: 4px 0;
+        }
+
+        /* FUNCTIONS TABLE */
+        .functions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .functions-table thead {
+            background: var(--bg-main);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .functions-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .functions-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .functions-table tbody tr:hover {
+            background: rgba(37, 99, 235, 0.02);
+        }
+
+        .fn-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            color: var(--c1);
+        }
+
+        .fn-type {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--bg-main);
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .fn-type.function { background: rgba(37, 99, 235, 0.1); color: var(--c1); }
+        .fn-type.class { background: rgba(13, 148, 136, 0.1); color: var(--c2); }
+
+        .fn-file {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .badges {
+            display: flex;
+            gap: 4px;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge.public { background: rgba(37, 99, 235, 0.15); color: var(--c1); }
+        .badge.entry { background: rgba(217, 119, 6, 0.15); color: var(--c4); }
+        .badge.side-effect { background: rgba(225, 29, 72, 0.15); color: var(--c5); }
+
+        .importance-bar {
+            width: 60px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .importance-bar-fill {
+            height: 100%;
+            background: var(--c3);
+            border-radius: 3px;
+        }
+
+        /* ONBOARDING */
+        .onboarding-steps {
+            display: grid;
+            gap: 16px;
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--c4);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .step-content p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .step-content code {
+            background: var(--bg-main);
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+
+        .key-points {
+            background: var(--bg-main);
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid var(--c4);
+            margin-top: 16px;
+        }
+
+        .key-points h4 {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .key-points ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .key-points li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .key-points li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--c4);
+            font-weight: 600;
+        }
+
+        .reading-order {
+            background: var(--bg-main);
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid var(--c2);
+            margin-top: 16px;
+        }
+
+        .reading-order h4 {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .reading-order ol {
+            margin-left: 20px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .reading-order li {
+            margin-bottom: 8px;
+        }
+
+        /* REQUIREMENTS */
+        .requirements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .req-card {
+            background: var(--bg-main);
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .req-card.runtime { border-left-color: var(--c1); }
+        .req-card.build { border-left-color: var(--c2); }
+        .req-card.compat { border-left-color: var(--c3); }
+        .req-card.conventions { border-left-color: var(--c4); }
+
+        .req-card h4 {
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .req-card ul {
+            list-style: none;
+            padding: 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .req-card li {
+            padding: 4px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .req-card li:before {
+            content: "▪";
+            position: absolute;
+            left: 4px;
+        }
+
+        /* FOOTER */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .footer a {
+            color: var(--c1);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .architecture {
+                grid-template-columns: 1fr;
+            }
+
+            .header-meta {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .requirements-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .functions-table {
+                font-size: 0.85rem;
+            }
+
+            .functions-table th, .functions-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>test_claude</h1>
+            <p>Task Decomposition Agent — Multi-step Reasoning with Claude</p>
+            <div class="header-meta">
+                <div class="meta-item">
+                    <span class="meta-badge">Python 3</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-badge">LangGraph + Anthropic</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-badge">338 LOC</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-badge">9 Functions</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 01. ARCHITECTURE -->
+        <div class="section">
+            <details open>
+                <summary class="section-title c1">
+                    <span>01. ARCHITECTURE</span>
+                    <span class="toggle-icon">▼</span>
+                </summary>
+                <div class="section-content">
+                    <div class="architecture">
+                        <div class="arch-layers">
+                            <div class="layer-box layer-user" onclick="showArchDetail(0)">
+                                <strong>User Interface</strong>
+                                <div style="font-size: 0.85rem; font-weight: normal; color: inherit; opacity: 0.8;">main.py</div>
+                            </div>
+                            <div class="layer-box layer-api" onclick="showArchDetail(1)">
+                                <strong>Orchestration</strong>
+                                <div style="font-size: 0.85rem; font-weight: normal; color: inherit; opacity: 0.8;">LangGraph workflow</div>
+                            </div>
+                            <div class="layer-box layer-core" onclick="showArchDetail(2)">
+                                <strong>Agent Core</strong>
+                                <div style="font-size: 0.85rem; font-weight: normal; color: inherit; opacity: 0.8;">Decomposer, Executor, Synthesizer</div>
+                            </div>
+                            <div class="layer-box layer-util" onclick="showArchDetail(3)">
+                                <strong>State Management</strong>
+                                <div style="font-size: 0.85rem; font-weight: normal; color: inherit; opacity: 0.8;">AgentState TypedDict</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="arch-detail active" id="arch-0">
+                                <strong>User Interface (main.py)</strong>
+                                <p>CLI entry point. Reads user input in a loop, calls the agent, and displays final answers.</p>
+                                <p><code style="font-size: 0.85rem;">main() → run_agent(task) → print(answer)</code></p>
+                            </div>
+                            <div class="arch-detail" id="arch-1">
+                                <strong>Orchestration (LangGraph)</strong>
+                                <p>State-based workflow engine. Defines nodes (decomposer, executor, synthesizer) and conditional routing.</p>
+                                <p><strong>Key pattern:</strong> StateGraph with adaptive thinking enabled on Claude calls.</p>
+                            </div>
+                            <div class="arch-detail" id="arch-2">
+                                <strong>Agent Core (Nodes)</strong>
+                                <p><strong>decomposer:</strong> Breaks task into subtasks via Claude</p>
+                                <p><strong>executor:</strong> Processes each subtask sequentially</p>
+                                <p><strong>synthesizer:</strong> Combines results into final answer</p>
+                            </div>
+                            <div class="arch-detail" id="arch-3">
+                                <strong>State Management</strong>
+                                <p>Immutable state passed through each node.</p>
+                                <p><strong>Fields:</strong> task, subtasks[], subtask_results[], current_index, final_answer, num_steps</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- 02. WORKFLOW -->
+        <div class="section">
+            <details open>
+                <summary class="section-title c2">
+                    <span>02. WORKFLOW</span>
+                    <span class="toggle-icon">▼</span>
+                </summary>
+                <div class="section-content">
+                    <div class="workflow-tabs">
+                        <button class="workflow-tab active" onclick="switchWorkflow(0)">Task Decomposition & Execution</button>
+                    </div>
+
+                    <div class="workflow-content active" id="workflow-0">
+                        <div style="margin-bottom: 20px;">
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c1);">1</div>
+                                <div class="flow-step-text">
+                                    User inputs task via CLI
+                                    <span class="layer-tag" style="background: var(--layer-user); color: #1e40af;">USER</span>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c2);">2</div>
+                                <div class="flow-step-text">
+                                    main() calls run_agent(task)
+                                    <span class="layer-tag" style="background: var(--layer-api); color: #065f46;">ENTRY</span>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c3);">3</div>
+                                <div class="flow-step-text">
+                                    Decomposer node: Claude breaks task into subtasks
+                                    <span class="layer-tag" style="background: var(--layer-core); color: #5b21b6;">CORE</span>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c4);">4</div>
+                                <div class="flow-step-text">
+                                    Loop: Executor node processes each subtask
+                                    <span class="layer-tag" style="background: var(--layer-util); color: #92400e;">LOOP</span>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓ (repeat N times)</div>
+
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c5);">5</div>
+                                <div class="flow-step-text">
+                                    Router: Check if all subtasks done
+                                    <span class="layer-tag" style="background: var(--layer-core); color: #5b21b6;">CORE</span>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓ (if all done)</div>
+
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c3);">6</div>
+                                <div class="flow-step-text">
+                                    Synthesizer node: Combine results into final answer
+                                    <span class="layer-tag" style="background: var(--layer-core); color: #5b21b6;">CORE</span>
+                                </div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+
+                            <div class="flow-step">
+                                <div class="flow-step-num" style="background: var(--c1);">7</div>
+                                <div class="flow-step-text">
+                                    Return final_answer to main()
+                                    <span class="layer-tag" style="background: var(--layer-user); color: #1e40af;">USER</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- 03. FUNCTION IMPORTANCE -->
+        <div class="section">
+            <details open>
+                <summary class="section-title c3">
+                    <span>03. FUNCTION IMPORTANCE</span>
+                    <span class="toggle-icon">▼</span>
+                </summary>
+                <div class="section-content">
+                    <table class="functions-table">
+                        <thead>
+                            <tr>
+                                <th>Function</th>
+                                <th>Type</th>
+                                <th>File</th>
+                                <th>Badges</th>
+                                <th>Importance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="fn-name">main()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">main.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                        <span class="badge entry">entry</span>
+                                        <span class="badge side-effect">I/O</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 92%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">92</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">run_agent()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">src/graph.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                        <span class="badge entry">entry</span>
+                                        <span class="badge side-effect">API</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 85%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">85</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">decomposer()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">src/nodes.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                        <span class="badge side-effect">API</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 78%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">78</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">executor()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">src/nodes.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                        <span class="badge side-effect">API</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 75%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">75</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">synthesizer()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">src/nodes.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                        <span class="badge side-effect">API</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 72%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">72</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">should_continue_executing()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">src/nodes.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 65%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">65</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">AgentState</span></td>
+                                <td><span class="fn-type class">TypedDict</span></td>
+                                <td><span class="fn-file">src/state.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 60%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">60</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="fn-name">add()</span></td>
+                                <td><span class="fn-type function">function</span></td>
+                                <td><span class="fn-file">first_func.py</span></td>
+                                <td>
+                                    <div class="badges">
+                                        <span class="badge public">public</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="importance-bar"><div class="importance-bar-fill" style="width: 25%;"></div></div>
+                                        <span style="font-size: 0.85rem; font-weight: 600;">25</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </div>
+
+        <!-- 04. ONBOARDING -->
+        <div class="section">
+            <details open>
+                <summary class="section-title c4">
+                    <span>04. QUICK START</span>
+                    <span class="toggle-icon">▼</span>
+                </summary>
+                <div class="section-content">
+                    <div class="onboarding-steps">
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div class="step-content">
+                                <h4>Create & activate virtual environment</h4>
+                                <p>Isolate dependencies from system Python</p>
+                                <code>python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate</code>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h4>Install dependencies</h4>
+                                <p>Get Anthropic SDK and LangGraph</p>
+                                <code>pip install -r requirements.txt</code>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h4>Set Anthropic API key</h4>
+                                <p>Required for Claude API calls</p>
+                                <code>export ANTHROPIC_API_KEY="your-api-key-here"</code>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h4>Run the agent</h4>
+                                <p>Start the CLI and test with a task</p>
+                                <code>python main.py
+# Then type: "How do I learn Python?"</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="key-points">
+                        <h4>📌 Key Points to Know</h4>
+                        <ul>
+                            <li><strong>Extended thinking enabled:</strong> All Claude calls use adaptive thinking for deeper reasoning</li>
+                            <li><strong>Async execution:</strong> Tasks are decomposed, then each subtask is executed sequentially</li>
+                            <li><strong>Context retention:</strong> Each executor call has access to previous subtask results</li>
+                            <li><strong>State immutability:</strong> LangGraph passes state snapshots, no mutations</li>
+                            <li><strong>Model:</strong> Claude Opus 4.6 for best multi-step reasoning</li>
+                            <li><strong>Exit the CLI:</strong> Type 'exit' or 'quit' to stop</li>
+                        </ul>
+                    </div>
+
+                    <div class="reading-order">
+                        <h4>📖 Reading Order for New Devs</h4>
+                        <ol>
+                            <li>Read <code>README.md</code> (if exists) for project overview</li>
+                            <li>Look at <code>main.py</code> — understand the CLI entry point</li>
+                            <li>Study <code>src/state.py</code> — AgentState TypedDict is the contract</li>
+                            <li>Read <code>src/graph.py</code> — how nodes connect and workflow compiles</li>
+                            <li>Deep dive <code>src/nodes.py</code> — decomposer, executor, synthesizer logic</li>
+                            <li>Check <code>requirements.txt</code> — dependencies and versions</li>
+                        </ol>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- 05. REQUIREMENTS -->
+        <div class="section">
+            <details open>
+                <summary class="section-title c5">
+                    <span>05. REQUIREMENTS</span>
+                    <span class="toggle-icon">▼</span>
+                </summary>
+                <div class="section-content">
+                    <div class="requirements-grid">
+                        <div class="req-card runtime">
+                            <h4>Runtime</h4>
+                            <ul>
+                                <li><strong>Python:</strong> 3.10+</li>
+                                <li><strong>Anthropic SDK:</strong> ≥0.40.0</li>
+                                <li><strong>LangGraph:</strong> ≥0.2.0</li>
+                            </ul>
+                        </div>
+
+                        <div class="req-card build">
+                            <h4>Environment Variables</h4>
+                            <ul>
+                                <li><strong>ANTHROPIC_API_KEY</strong> (required) — Your Anthropic API key</li>
+                            </ul>
+                        </div>
+
+                        <div class="req-card compat">
+                            <h4>External Services</h4>
+                            <ul>
+                                <li><strong>Anthropic API</strong> — For Claude model access</li>
+                                <li>Internet connection required for API calls</li>
+                            </ul>
+                        </div>
+
+                        <div class="req-card conventions">
+                            <h4>Tech Stack</h4>
+                            <ul>
+                                <li><strong>Pattern:</strong> LangGraph State Machine</li>
+                                <li><strong>Model:</strong> Claude Opus 4.6</li>
+                                <li><strong>Feature:</strong> Extended Thinking (adaptive)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>Repository documentation auto-generated. For detailed function signatures, see <a href="functions.md">functions.md</a></p>
+            <p style="margin-top: 12px; font-size: 0.8rem;">Last updated: 2025-01-16 | Stack: Python · LangGraph · Anthropic</p>
+        </div>
+    </div>
+
+    <script>
+        function showArchDetail(idx) {
+            document.querySelectorAll('.arch-detail').forEach(el => el.classList.remove('active'));
+            document.getElementById(`arch-${idx}`).classList.add('active');
+        }
+
+        function switchWorkflow(idx) {
+            document.querySelectorAll('.workflow-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.workflow-content').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`workflow-${idx}`).classList.add('active');
+        }
+    </script>
+</body>
+</html>

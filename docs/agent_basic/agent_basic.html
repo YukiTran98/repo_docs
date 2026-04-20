@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agent_basic — Repo Knowledge</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f4f0;--bg2:#ffffff;--bg3:#eeecea;--bg4:#e4e2de;
+  --line:rgba(0,0,0,0.07);--line2:rgba(0,0,0,0.11);
+  --text:#1a1917;--text2:#5a5750;--text3:#9a978f;
+  --accent:#4e6b9e;--accent-bg:rgba(78,107,158,0.09);--accent-bd:rgba(78,107,158,0.28);
+  --accent2:#3d7a60;--accent2-bg:rgba(61,122,96,0.09);--accent2-bd:rgba(61,122,96,0.28);
+  --warn:#8a6030;--warn-bg:rgba(138,96,48,0.09);--warn-bd:rgba(138,96,48,0.28);
+  --p-blue:#3d5a8a;--p-blue-bg:#dde6f2;--p-blue-bd:rgba(61,90,138,0.30);
+  --p-green:#2e7058;--p-green-bg:#d8eee6;--p-green-bd:rgba(46,112,88,0.30);
+  --p-purple:#5b4890;--p-purple-bg:#e4dff2;--p-purple-bd:rgba(91,72,144,0.30);
+  --p-warn:#7a5a20;--p-warn-bg:#f0e8d5;--p-warn-bd:rgba(122,90,32,0.30);
+  --p-gray:#6a6560;--p-gray-bg:#e8e6e2;--p-gray-bd:rgba(106,101,96,0.25);
+  --mono:'IBM Plex Mono',monospace;--sans:'Sora',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;font-size:14px;}
+.wrap{max-width:940px;margin:0 auto;padding:48px 28px 100px;}
+.hdr{margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--line);}
+.hdr-top{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
+.hdr h1{font-size:2rem;font-weight:600;letter-spacing:-0.03em;color:var(--text);}
+.vtag{font-family:var(--mono);font-size:12px;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-bd);padding:2px 10px;border-radius:4px;}
+.hdr-desc{font-size:14px;color:var(--text2);max-width:600px;line-height:1.75;margin-bottom:14px;}
+.hdr-meta{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text3);font-family:var(--mono);}
+.hdr-meta span::before{content:'// ';}
+details{background:var(--bg2);border:1px solid var(--line2);border-radius:10px;overflow:hidden;margin-bottom:8px;}
+summary{padding:18px 22px;font-size:12px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;list-style:none;user-select:none;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);}
+summary::-webkit-details-marker{display:none;}
+.sl{display:flex;align-items:center;gap:14px;}
+.sn{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:0.04em;width:20px;}
+details .sn{color:var(--accent);}
+details summary{border-left:3px solid var(--accent);}
+.tog{width:20px;height:20px;border:1px solid var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text3);font-weight:300;flex-shrink:0;}
+details[open] .tog::after{content:'−';}.tog::after{content:'+';}
+.sb{padding:0 22px 28px;border-top:1px solid var(--line);}
+.pt{padding-top:22px;}
+.sec-intro{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:22px;}
+.arch-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+@media(max-width:640px){.arch-wrap{grid-template-columns:1fr;}}
+.layer-diagram{display:flex;flex-direction:column;gap:3px;}
+.layer-box{border:1px solid var(--line2);border-radius:8px;padding:14px 16px;cursor:pointer;transition:border-color .18s,background .18s;}
+.layer-arrow{text-align:center;color:var(--text3);font-size:12px;padding:2px 0;}
+.layer-tag{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.09em;color:var(--text3);margin-bottom:4px;font-weight:500;}
+.layer-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-0.01em;}
+.layer-files{font-family:var(--mono);font-size:11px;color:var(--text3);line-height:1.6;}
+.layer-box[data-color="blue"]{border-color:var(--p-blue-bd);background:var(--p-blue-bg);}
+.layer-box[data-color="green"]{border-color:var(--p-green-bd);background:var(--p-green-bg);}
+.layer-box[data-color="purple"]{border-color:var(--p-purple-bd);background:var(--p-purple-bg);}
+.layer-box[data-color="gray"]{border-color:var(--p-gray-bd);background:var(--p-gray-bg);}
+.layer-box[data-color="warn"]{border-color:var(--p-warn-bd);background:var(--p-warn-bg);}
+.layer-box[data-color="blue"]:hover,.layer-box[data-color="blue"].active{border-color:var(--p-blue);filter:brightness(0.95);}
+.layer-box[data-color="green"]:hover,.layer-box[data-color="green"].active{border-color:var(--p-green);filter:brightness(0.95);}
+.layer-box[data-color="purple"]:hover,.layer-box[data-color="purple"].active{border-color:var(--p-purple);filter:brightness(0.95);}
+.layer-box[data-color="gray"]:hover,.layer-box[data-color="gray"].active{border-color:var(--p-gray);filter:brightness(0.95);}
+.layer-box[data-color="warn"]:hover,.layer-box[data-color="warn"].active{border-color:var(--p-warn);filter:brightness(0.95);}
+.arch-detail{background:var(--bg3);border:1px solid var(--line2);border-radius:10px;padding:20px;min-height:260px;position:sticky;top:20px;}
+.arch-detail-placeholder{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text3);font-size:13px;font-family:var(--mono);}
+.detail-tag{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.detail-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:-0.01em;}
+.detail-desc{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:16px;}
+.detail-comps{display:flex;flex-direction:column;gap:7px;}
+.detail-comp{background:var(--bg4);border-radius:6px;padding:9px 12px;display:flex;gap:10px;align-items:baseline;}
+.detail-comp-name{font-family:var(--mono);font-size:12px;font-weight:500;min-width:130px;flex-shrink:0;}
+.detail-comp-role{font-size:12px;color:var(--text2);}
+.detail-comp-name.blue{color:var(--p-blue);}.detail-comp-name.green{color:var(--p-green);}.detail-comp-name.purple{color:var(--p-purple);}.detail-comp-name.warn{color:var(--p-warn);}
+.wf-tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;}
+.wf-tab{font-size:12px;font-family:var(--mono);padding:6px 14px;border-radius:6px;border:1px solid var(--line2);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;}
+.wf-tab:hover{color:var(--text);}
+.wf-tab.active{background:var(--accent-bg);border-color:var(--accent-bd);color:var(--accent);font-weight:600;}
+.wf-panel{display:none;}.wf-panel.active{display:block;}
+.flow{display:flex;flex-direction:column;gap:0;}
+.flow-step{display:flex;align-items:stretch;gap:0;}
+.flow-left{display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0;}
+.flow-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:14px;}
+.flow-dot.blue{background:var(--p-blue);}.flow-dot.green{background:var(--p-green);}.flow-dot.purple{background:var(--p-purple);}.flow-dot.warn{background:var(--p-warn);}.flow-dot.gray{background:var(--p-gray);}
+.flow-line{width:1px;background:var(--line2);flex:1;margin-top:2px;margin-bottom:2px;}
+.flow-step:last-child .flow-line{display:none;}
+.flow-card{flex:1;background:var(--bg3);border:1px solid var(--line2);border-radius:8px;padding:13px 16px;margin-bottom:8px;margin-left:4px;}
+.flow-card.blue{background:var(--p-blue-bg);border-color:var(--p-blue-bd);}
+.flow-card.green{background:var(--p-green-bg);border-color:var(--p-green-bd);}
+.flow-card.purple{background:var(--p-purple-bg);border-color:var(--p-purple-bd);}
+.flow-card.warn{background:var(--p-warn-bg);border-color:var(--p-warn-bd);}
+.flow-card.gray{background:var(--p-gray-bg);border-color:var(--p-gray-bd);}
+.flow-card-layer{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;}
+.flow-card-layer.blue{color:var(--p-blue);}.flow-card-layer.green{color:var(--p-green);}.flow-card-layer.purple{color:var(--p-purple);}.flow-card-layer.warn{color:var(--p-warn);}.flow-card-layer.gray{color:var(--p-gray);}
+.flow-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.flow-card-desc{font-size:12px;color:var(--text2);line-height:1.6;}
+.flow-card code{font-family:var(--mono);font-size:11px;color:var(--accent2);background:var(--accent2-bg);padding:1px 5px;border-radius:3px;}
+.fn-table{width:100%;border-collapse:collapse;font-size:13px;}
+.fn-table thead tr{border-bottom:1px solid var(--line2);}
+.fn-table th{padding:10px 14px;text-align:left;font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);font-weight:400;}
+.fn-table td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.fn-table tbody tr:last-child td{border-bottom:none;}
+.fn-table tbody tr:hover td{background:var(--bg3);}
+.fn-n{font-family:var(--mono);font-weight:500;}
+.fn-n.h{color:var(--text);font-weight:600;}.fn-n.m{color:var(--text);}.fn-n.l{color:var(--text2);}
+.fn-f{font-family:var(--mono);font-size:11px;color:var(--text3);}
+.ftype{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid;}
+.ftype.cls{color:var(--p-purple);border-color:var(--p-purple-bd);background:var(--p-purple-bg);}
+.ftype.fn{color:var(--accent2);border-color:var(--accent2-bd);background:var(--accent2-bg);}
+.bgs{display:inline-flex;gap:4px;}
+.bep{font-size:9px;font-family:var(--mono);padding:1px 6px;border-radius:3px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bd);}
+.bpb{font-size:9px;font-family:var(--mono);padding:1px 6px;border-radius:3px;background:var(--accent2-bg);color:var(--accent2);border:1px solid var(--accent2-bd);}
+.bfx{font-size:9px;font-family:var(--mono);padding:1px 6px;border-radius:3px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd);}
+.sb2{display:flex;align-items:center;gap:8px;}
+.st{height:4px;background:var(--bg4);border-radius:2px;flex:1;min-width:60px;overflow:hidden;}
+.sf{height:100%;border-radius:2px;}
+.sf.h{background:var(--accent2);}.sf.m{background:var(--accent);}.sf.l{background:var(--text3);}
+.sn2{font-family:var(--mono);font-size:11px;min-width:28px;text-align:right;}
+.sn2.h{color:var(--accent2);font-weight:500;}.sn2.m{color:var(--accent);}.sn2.l{color:var(--text3);}
+.fn-hidden{display:none;}
+.fn-more{display:block;width:100%;margin-top:10px;padding:8px;background:none;border:1px solid var(--line2);border-radius:6px;font-size:12px;font-family:var(--mono);color:var(--text3);cursor:pointer;letter-spacing:0.04em;}
+.fn-more:hover{background:var(--bg3);color:var(--text);}
+.og{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:620px){.og{grid-template-columns:1fr;}}
+.oc{background:var(--bg3);border:1px solid var(--line2);border-radius:8px;padding:18px;}
+.oc h4{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:14px;}
+.cb{background:var(--bg);border:1px solid var(--line2);border-radius:6px;padding:13px 15px;margin-bottom:8px;}
+.cb-label{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.07em;color:var(--accent);margin-bottom:8px;font-weight:500;}
+.cb pre{font-family:var(--mono);font-size:12px;color:var(--text2);line-height:1.85;white-space:pre-wrap;}
+.cb pre .cmd{color:var(--accent2);}.cb pre .cmt{color:var(--text3);font-style:italic;}.cb pre .str{color:var(--warn);}
+.kl{display:flex;flex-direction:column;gap:10px;}
+.ki{display:flex;gap:10px;align-items:flex-start;}
+.kd{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;}
+.ki p{font-size:13px;color:var(--text2);line-height:1.65;}
+.ki p strong{color:var(--text);font-weight:500;}
+.ki code{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-bg);padding:1px 5px;border-radius:3px;}
+.sr{margin-top:8px;padding:11px 14px;background:var(--bg);border:1px solid var(--line2);border-radius:6px;}
+.sr-lbl{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:4px;}
+.sr code{font-family:var(--mono);font-size:12px;color:var(--accent2);}
+.req-list{display:flex;flex-direction:column;gap:6px;}
+.req-item{font-size:13px;color:var(--text2);display:flex;gap:8px;align-items:flex-start;line-height:1.55;}
+.req-item::before{content:'—';color:var(--text3);flex-shrink:0;font-family:var(--mono);}
+.req-item code{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-bg);padding:1px 5px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <h1>agent_basic</h1>
+    <span class="vtag">init · 2026-04-12</span>
+  </div>
+  <p class="hdr-desc">Multi-agent orchestration system: một Main Agent (gpt-4.1) nhận query từ người dùng và tự động phân luồng sang 3 sub-agent chuyên biệt — Weather, Notion, và PDF Knowledge Base — mỗi sub-agent kết nối tới MCP server riêng qua stdio transport. Hỗ trợ cả CLI REPL và Web UI qua WebSocket.</p>
+  <div class="hdr-meta">
+    <span>ai/agent_basic</span>
+    <span>Python 3.10+</span>
+    <span>8 files · ~380 lines</span>
+    <span>Analyzed April 12, 2026</span>
+  </div>
+</div>
+
+<!-- 01 ARCHITECTURE -->
+<details open>
+  <summary><div class="sl"><span class="sn">01</span> Architecture</div><div class="tog"></div></summary>
+  <div class="sb pt">
+    <p class="sec-intro">Kiến trúc 5 layer theo pattern Multi-Agent Orchestration — Main Agent làm router, mỗi sub-agent delegate xuống MCP server chuyên biệt qua stdio transport. Click vào từng layer để xem chi tiết.</p>
+    <div class="arch-wrap">
+      <div class="layer-diagram">
+
+        <div class="layer-box" data-color="blue" data-id="entry" onclick="selectLayer(this)">
+          <div class="layer-tag">Layer 1 · Entry</div>
+          <div class="layer-name">User Interface</div>
+          <div class="layer-files">main.py · web_main_agent.py</div>
+        </div>
+        <div class="layer-arrow">↓</div>
+
+        <div class="layer-box" data-color="green" data-id="orchestrator" onclick="selectLayer(this)">
+          <div class="layer-tag">Layer 2 · Orchestrator</div>
+          <div class="layer-name">Main Agent</div>
+          <div class="layer-files">main.py → init_main_agent() · gpt-4.1</div>
+        </div>
+        <div class="layer-arrow">↓</div>
+
+        <div class="layer-box" data-color="purple" data-id="subagent" onclick="selectLayer(this)">
+          <div class="layer-tag">Layer 3 · Sub-Agent</div>
+          <div class="layer-name">MCPAgent</div>
+          <div class="layer-files">mcp_agent.py · MCPAgent.run()</div>
+        </div>
+        <div class="layer-arrow">↓</div>
+
+        <div class="layer-box" data-color="warn" data-id="mcp" onclick="selectLayer(this)">
+          <div class="layer-tag">Layer 4 · MCP Servers</div>
+          <div class="layer-name">Domain Tools</div>
+          <div class="layer-files">weather_mcp_server.py · notion_mcp_server.py · knowledge_base_server.py</div>
+        </div>
+        <div class="layer-arrow">↓</div>
+
+        <div class="layer-box" data-color="gray" data-id="data" onclick="selectLayer(this)">
+          <div class="layer-tag">Layer 5 · Data</div>
+          <div class="layer-name">Vector Store</div>
+          <div class="layer-files">create_vector_db/ingest_db.py · vectorstores/pdf_faiss</div>
+        </div>
+
+      </div>
+      <div class="arch-detail" id="arch-detail">
+        <div class="arch-detail-placeholder">← click một layer để xem chi tiết</div>
+      </div>
+    </div>
+  </div>
+</details>
+
+<!-- 02 WORKFLOW -->
+<details>
+  <summary><div class="sl"><span class="sn">02</span> Workflow</div><div class="tog"></div></summary>
+  <div class="sb pt">
+    <p class="sec-intro">Mỗi workflow được map trực tiếp lên các layer — màu của từng bước tương ứng với layer đang xử lý.</p>
+    <div class="wf-tabs">
+      <button class="wf-tab active" onclick="switchWf(this,'wf-cli')">A · CLI Chat</button>
+      <button class="wf-tab" onclick="switchWf(this,'wf-web')">B · Web Chat</button>
+      <button class="wf-tab" onclick="switchWf(this,'wf-ingest')">C · PDF Ingestion</button>
+    </div>
+
+    <div class="wf-panel active" id="wf-cli">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot blue"></div><div class="flow-line"></div></div>
+          <div class="flow-card blue">
+            <div class="flow-card-layer blue">Layer 1 · Entry</div>
+            <div class="flow-card-title">python main.py</div>
+            <div class="flow-card-desc"><code>asyncio.run(start_chat())</code> — khởi động REPL async loop.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot green"></div><div class="flow-line"></div></div>
+          <div class="flow-card green">
+            <div class="flow-card-layer green">Layer 2 · Orchestrator</div>
+            <div class="flow-card-title">init_main_agent()</div>
+            <div class="flow-card-desc">Kết nối 3 MCP server qua <code>connect_to_mcp()</code>, wrap mỗi sub-agent thành <code>@function_tool</code>, tạo Main Agent (gpt-4.1).</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot blue"></div><div class="flow-line"></div></div>
+          <div class="flow-card blue">
+            <div class="flow-card-layer blue">Layer 1 · Entry</div>
+            <div class="flow-card-title">User nhập query</div>
+            <div class="flow-card-desc"><code>input("You: ")</code> → <code>runner.run(main_agent, input=query)</code>.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot green"></div><div class="flow-line"></div></div>
+          <div class="flow-card green">
+            <div class="flow-card-layer green">Layer 2 · Orchestrator</div>
+            <div class="flow-card-title">Main Agent phân luồng</div>
+            <div class="flow-card-desc">gpt-4.1 quyết định gọi <code>call_weather_agent</code>, <code>call_notion_agent</code>, hoặc <code>call_knowledge_agent</code> dựa trên nội dung query.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot purple"></div><div class="flow-line"></div></div>
+          <div class="flow-card purple">
+            <div class="flow-card-layer purple">Layer 3 · Sub-Agent</div>
+            <div class="flow-card-title">MCPAgent.run(query)</div>
+            <div class="flow-card-desc">Gọi <code>session.list_tools()</code>, gửi query + tools lên OpenAI, xử lý <code>tool_calls</code>, gọi MCP tool, feed kết quả lại cho model.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot warn"></div><div class="flow-line"></div></div>
+          <div class="flow-card warn">
+            <div class="flow-card-layer warn">Layer 4 · MCP Server</div>
+            <div class="flow-card-title">MCP tool execution</div>
+            <div class="flow-card-desc">FastMCP server nhận tool call qua stdio, thực thi (API call / vector search), trả kết quả về MCPAgent.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot blue"></div><div class="flow-line"></div></div>
+          <div class="flow-card blue">
+            <div class="flow-card-layer blue">Layer 1 · Entry</div>
+            <div class="flow-card-title">In kết quả</div>
+            <div class="flow-card-desc"><code>result.final_output</code> từ OpenAI Agents SDK được print ra terminal.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-panel" id="wf-web">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot blue"></div><div class="flow-line"></div></div>
+          <div class="flow-card blue">
+            <div class="flow-card-layer blue">Layer 1 · Entry</div>
+            <div class="flow-card-title">uvicorn web_main_agent:app</div>
+            <div class="flow-card-desc">FastAPI app khởi động với <code>lifespan</code> context manager — gọi <code>init_main_agent()</code> khi startup.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot green"></div><div class="flow-line"></div></div>
+          <div class="flow-card green">
+            <div class="flow-card-layer green">Layer 2 · Orchestrator</div>
+            <div class="flow-card-title">Agent initialization</div>
+            <div class="flow-card-desc">Giống CLI — 3 MCP connections được thiết lập, Main Agent sẵn sàng nhận request. Stack giữ sống suốt lifetime app.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot blue"></div><div class="flow-line"></div></div>
+          <div class="flow-card blue">
+            <div class="flow-card-layer blue">Layer 1 · Entry</div>
+            <div class="flow-card-title">Client kết nối WebSocket /ws</div>
+            <div class="flow-card-desc">Browser mở <code>ws://localhost:8000/ws</code>. <code>websocket_endpoint</code> nhận text message và forward sang <code>runner.run()</code>.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot purple"></div><div class="flow-line"></div></div>
+          <div class="flow-card purple">
+            <div class="flow-card-layer purple">Layer 3 · Sub-Agent</div>
+            <div class="flow-card-title">Delegation → MCPAgent</div>
+            <div class="flow-card-desc">Tương tự CLI flow: Main Agent → function tool → MCPAgent.run() → MCP server → trả kết quả.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot blue"></div><div class="flow-line"></div></div>
+          <div class="flow-card blue">
+            <div class="flow-card-layer blue">Layer 1 · Entry</div>
+            <div class="flow-card-title">ws.send_text(result)</div>
+            <div class="flow-card-desc">Kết quả được gửi về browser qua WebSocket, hiển thị dưới dạng chat bubble của assistant.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-panel" id="wf-ingest">
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot gray"></div><div class="flow-line"></div></div>
+          <div class="flow-card gray">
+            <div class="flow-card-layer gray">Layer 5 · Data</div>
+            <div class="flow-card-title">Chuẩn bị PDF</div>
+            <div class="flow-card-desc">Đặt file PDF vào <code>create_vector_db/data/document.pdf</code>. Đây là nguồn dữ liệu duy nhất cho Knowledge Base agent.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot gray"></div><div class="flow-line"></div></div>
+          <div class="flow-card gray">
+            <div class="flow-card-layer gray">Layer 5 · Data</div>
+            <div class="flow-card-title">python create_vector_db/ingest_db.py</div>
+            <div class="flow-card-desc"><code>ingest_pdf()</code> load PDF qua <code>PyPDFLoader</code>, chunk với <code>RecursiveCharacterTextSplitter</code> (800 chars, 100 overlap).</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot gray"></div><div class="flow-line"></div></div>
+          <div class="flow-card gray">
+            <div class="flow-card-layer gray">Layer 5 · Data</div>
+            <div class="flow-card-title">Embed + Save FAISS</div>
+            <div class="flow-card-desc">Mỗi chunk được embed bằng <code>text-embedding-3-small</code> qua OpenAI API, lưu vào <code>vectorstores/pdf_faiss/</code>.</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-dot warn"></div><div class="flow-line"></div></div>
+          <div class="flow-card warn">
+            <div class="flow-card-layer warn">Layer 4 · MCP Server</div>
+            <div class="flow-card-title">knowledge_base_server.py startup</div>
+            <div class="flow-card-desc"><code>FAISS.load_local()</code> tải DB vào memory khi server khởi động. <code>search_pdf</code> tool sẵn sàng nhận query từ MCPAgent.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</details>
+
+<!-- 03 FUNCTION IMPORTANCE -->
+<details>
+  <summary><div class="sl"><span class="sn">03</span> Function importance</div><div class="tog"></div></summary>
+  <div class="sb pt">
+    <p class="sec-intro" style="margin-bottom:16px;">Score = usage_count ×0.35 + public ×0.25 + entry_point ×0.25 + side_effects ×0.15 · normalized 0–100. 14 functions mapped.</p>
+    <table class="fn-table">
+      <thead><tr><th>Name</th><th>Type</th><th>File</th><th>Flags</th><th style="min-width:120px;">Score</th></tr></thead>
+      <tbody>
+        <tr><td><span class="fn-n h">MCPAgent.run</span></td><td><span class="ftype cls">method</span></td><td><span class="fn-f">mcp_agent.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf h" style="width:95%"></div></div><span class="sn2 h">95</span></div></td></tr>
+        <tr><td><span class="fn-n h">init_main_agent</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">main.py</span></td>
+            <td><div class="bgs"><span class="bep">entry</span><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf h" style="width:90%"></div></div><span class="sn2 h">90</span></div></td></tr>
+        <tr><td><span class="fn-n h">start_chat</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">main.py</span></td>
+            <td><div class="bgs"><span class="bep">entry</span><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf h" style="width:82%"></div></div><span class="sn2 h">82</span></div></td></tr>
+        <tr><td><span class="fn-n h">websocket_endpoint</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">web_main_agent.py</span></td>
+            <td><div class="bgs"><span class="bep">entry</span><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf h" style="width:80%"></div></div><span class="sn2 h">80</span></div></td></tr>
+        <tr><td><span class="fn-n m">connect_to_mcp</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">main.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:72%"></div></div><span class="sn2 m">72</span></div></td></tr>
+        <tr><td><span class="fn-n m">search_pdf</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">knowledge_base_server.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:68%"></div></div><span class="sn2 m">68</span></div></td></tr>
+        <tr><td><span class="fn-n m">get_alert</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">weather_mcp_server.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:65%"></div></div><span class="sn2 m">65</span></div></td></tr>
+        <tr><td><span class="fn-n m">notion_search</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">notion_mcp_server.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:62%"></div></div><span class="sn2 m">62</span></div></td></tr>
+        <tr><td><span class="fn-n m">get_forecast</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">weather_mcp_server.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:62%"></div></div><span class="sn2 m">62</span></div></td></tr>
+        <tr><td><span class="fn-n m">notion_get_page_content</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">notion_mcp_server.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:58%"></div></div><span class="sn2 m">58</span></div></td></tr>
+        <!-- rows 11+ hidden -->
+        <tr class="fn-hidden"><td><span class="fn-n m">notion_query_database</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">notion_mcp_server.py</span></td>
+            <td><div class="bgs"><span class="bpb">public</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:55%"></div></div><span class="sn2 m">55</span></div></td></tr>
+        <tr class="fn-hidden"><td><span class="fn-n m">ingest_pdf</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">create_vector_db/ingest_db.py</span></td>
+            <td><div class="bgs"><span class="bep">entry</span><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf m" style="width:50%"></div></div><span class="sn2 m">50</span></div></td></tr>
+        <tr class="fn-hidden"><td><span class="fn-n l">make_nws_request</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">weather_mcp_server.py</span></td>
+            <td><div class="bgs"><span class="bfx">side fx</span></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf l" style="width:38%"></div></div><span class="sn2 l">38</span></div></td></tr>
+        <tr class="fn-hidden"><td><span class="fn-n l">format_alert</span></td><td><span class="ftype fn">function</span></td><td><span class="fn-f">weather_mcp_server.py</span></td>
+            <td><div class="bgs"></div></td>
+            <td><div class="sb2"><div class="st"><div class="sf l" style="width:28%"></div></div><span class="sn2 l">28</span></div></td></tr>
+      </tbody>
+    </table>
+    <button class="fn-more" onclick="(function(b){var o=b.dataset.open==='1';b.parentElement.querySelectorAll('table .fn-hidden').forEach(function(r){r.style.display=o?'':'table-row';});b.dataset.open=o?'':'1';b.textContent=o?'▼ see more':'▲ see less';})(this)">▼ see more</button>
+  </div>
+</details>
+
+<!-- 04 ONBOARDING -->
+<details>
+  <summary><div class="sl"><span class="sn">04</span> Onboarding quick start</div><div class="tog"></div></summary>
+  <div class="sb pt">
+    <div class="og">
+      <div>
+        <div class="oc" style="margin-bottom:12px;">
+          <h4>Install &amp; run</h4>
+          <div class="cb">
+            <div class="cb-label">Step 1 — create &amp; activate virtualenv</div>
+            <pre><span class="cmd">python -m venv .venv</span>
+<span class="cmt"># Windows:</span>
+<span class="cmd">.venv\Scripts\activate</span>
+<span class="cmt"># macOS / Linux:</span>
+<span class="cmd">source .venv/bin/activate</span></pre>
+          </div>
+          <div class="cb">
+            <div class="cb-label">Step 2 — install dependencies</div>
+            <pre><span class="cmd">pip install -r requirements.txt</span></pre>
+          </div>
+          <div class="cb">
+            <div class="cb-label">Step 3 — setup env vars</div>
+            <pre><span class="cmt"># tạo file .env trong thư mục agent_basic/</span>
+<span class="str">OPENAI_API_KEY</span>=sk-...
+<span class="str">NOTION_TOKEN</span>=secret_...  <span class="cmt"># nếu dùng Notion agent</span></pre>
+          </div>
+          <div class="cb">
+            <div class="cb-label">Step 4 — ingest PDF (nếu dùng Knowledge agent)</div>
+            <pre><span class="cmt"># đặt PDF vào create_vector_db/data/document.pdf</span>
+<span class="cmd">python create_vector_db/ingest_db.py</span></pre>
+          </div>
+          <div class="cb">
+            <div class="cb-label">Step 5 — run</div>
+            <pre><span class="cmt"># CLI REPL:</span>
+<span class="cmd">python main.py</span>
+<span class="cmt"># Web UI (port 8000):</span>
+<span class="cmd">uvicorn web_main_agent:app --reload</span></pre>
+          </div>
+        </div>
+        <div class="oc">
+          <h4>Start reading code at</h4>
+          <div class="sr"><div class="sr-lbl">Step 1 — Entry point</div><code>main.py → start_chat()</code></div>
+          <div class="sr"><div class="sr-lbl">Step 2 — Agent wiring</div><code>main.py → init_main_agent()</code></div>
+          <div class="sr"><div class="sr-lbl">Step 3 — Sub-agent logic</div><code>mcp_agent.py → MCPAgent.run()</code></div>
+          <div class="sr"><div class="sr-lbl">Step 4 — MCP tools</div><code>weather_mcp_server.py · notion_mcp_server.py</code></div>
+          <div class="sr"><div class="sr-lbl">Step 5 — Web interface</div><code>web_main_agent.py</code></div>
+        </div>
+      </div>
+      <div class="oc">
+        <h4>Key things to know</h4>
+        <div class="kl">
+          <div class="ki"><div class="kd"></div>
+            <p><strong>MCP qua stdio transport.</strong> Mỗi MCP server được spawn như subprocess, giao tiếp qua stdin/stdout — không phải HTTP. <code>AsyncExitStack</code> quản lý vòng đời toàn bộ connections.</p>
+          </div>
+          <div class="ki"><div class="kd"></div>
+            <p><strong>Main Agent là pure router.</strong> gpt-4.1 không thực thi tool trực tiếp — nó chỉ quyết định sub-agent nào được gọi dựa trên intent của user query.</p>
+          </div>
+          <div class="ki"><div class="kd"></div>
+            <p><strong>MCPAgent là generic.</strong> <code>MCPAgent(session)</code> nhận bất kỳ MCP session nào, tự <code>list_tools()</code> và gọi OpenAI — không cần biết domain cụ thể.</p>
+          </div>
+          <div class="ki"><div class="kd"></div>
+            <p><strong>PDF ingest là one-time setup.</strong> Chạy <code>ingest_db.py</code> một lần trước khi dùng knowledge agent. FAISS DB được persist tại <code>vectorstores/pdf_faiss/</code>.</p>
+          </div>
+          <div class="ki"><div class="kd"></div>
+            <p><strong>Weather dùng NWS API (US only).</strong> <code>get_alert</code> cần 2-letter state code (CA, NY...) — Main Agent prompt đã có instruction convert tên đầy đủ sang code.</p>
+          </div>
+          <div class="ki"><div class="kd"></div>
+            <p><strong>Web UI giữ một stack duy nhất.</strong> <code>lifespan</code> giữ MCP connections sống xuyên suốt app — không reconnect mỗi request. Đóng gracefully khi shutdown.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</details>
+
+<!-- 05 REQUIREMENTS -->
+<details>
+  <summary><div class="sl"><span class="sn">05</span> Project requirements</div><div class="tog"></div></summary>
+  <div class="sb pt">
+    <div class="req-list">
+      <div class="req-item"><strong>Runtime</strong> — Python 3.10+ (async/await, <code>match</code> syntax)</div>
+      <div class="req-item"><code>OPENAI_API_KEY</code> — bắt buộc cho tất cả agent calls và PDF embedding</div>
+      <div class="req-item"><code>NOTION_TOKEN</code> — bắt buộc nếu dùng Notion agent (<code>notion_mcp_server.py</code>)</div>
+      <div class="req-item"><strong>openai-agents</strong> — OpenAI Agents SDK (<code>Agent</code>, <code>Runner</code>, <code>function_tool</code>)</div>
+      <div class="req-item"><strong>mcp &gt;= 0.2.0</strong> — MCP client/server (<code>ClientSession</code>, <code>FastMCP</code>, <code>StdioServerParameters</code>)</div>
+      <div class="req-item"><strong>langchain + faiss-cpu</strong> — PDF loading, text splitting, FAISS vector store (knowledge agent)</div>
+      <div class="req-item"><strong>fastapi + uvicorn</strong> — Web UI và WebSocket endpoint (<code>web_main_agent.py</code>)</div>
+      <div class="req-item"><strong>httpx</strong> — async HTTP cho Weather (NWS API) và Notion API</div>
+      <div class="req-item"><strong>PDF file</strong> — cần đặt tại <code>create_vector_db/data/document.pdf</code> trước khi chạy <code>ingest_db.py</code></div>
+    </div>
+  </div>
+</details>
+
+</div>
+
+<script>
+const LAYERS = {
+  entry: {
+    color: 'blue',
+    tag: 'Layer 1 · Entry',
+    title: 'User Interface',
+    desc: 'Hai entry points: CLI REPL (main.py) cho terminal interaction, và FastAPI/WebSocket app (web_main_agent.py) cho browser-based chat. Cả hai đều gọi init_main_agent() để setup agent stack trước khi nhận input.',
+    comps: [
+      {name: 'start_chat()', cls: 'blue', role: 'Async REPL loop, đọc input → runner.run() → print'},
+      {name: 'websocket_endpoint()', cls: 'blue', role: 'WS handler, receive_text → runner.run() → send_text'},
+      {name: 'lifespan(app)', cls: 'blue', role: 'FastAPI lifespan: init agent on startup, close stack on shutdown'},
+    ]
+  },
+  orchestrator: {
+    color: 'green',
+    tag: 'Layer 2 · Orchestrator',
+    title: 'Main Agent',
+    desc: 'Core của toàn bộ hệ thống. init_main_agent() thiết lập 3 MCP connections, wrap mỗi MCPAgent thành @function_tool, rồi tạo Main Agent gpt-4.1 với 3 tools đó. Agent quyết định routing dựa trên system prompt.',
+    comps: [
+      {name: 'init_main_agent()', cls: 'green', role: 'Setup 3 MCP connections + create main Agent(gpt-4.1)'},
+      {name: 'connect_to_mcp()', cls: 'green', role: 'Spawn MCP subprocess, establish ClientSession via stdio'},
+      {name: 'call_weather_agent', cls: 'green', role: '@function_tool wrapper — routes weather queries'},
+      {name: 'call_notion_agent', cls: 'green', role: '@function_tool wrapper — routes Notion queries'},
+      {name: 'call_knowledge_agent', cls: 'green', role: '@function_tool wrapper — routes PDF/SHB queries'},
+    ]
+  },
+  subagent: {
+    color: 'purple',
+    tag: 'Layer 3 · Sub-Agent',
+    title: 'MCPAgent',
+    desc: 'Generic agent class — nhận một MCP ClientSession, tự động list_tools(), gọi OpenAI với tool definitions, xử lý tool_calls response, execute tool qua session, và feed kết quả lại cho model để synthesize câu trả lời cuối.',
+    comps: [
+      {name: 'MCPAgent.__init__()', cls: 'purple', role: 'Nhận session, khởi tạo OpenAI client, model gpt-4.1'},
+      {name: 'MCPAgent.run(query)', cls: 'purple', role: 'Full agent loop: list_tools → LLM → tool_call → feed back → return'},
+    ]
+  },
+  mcp: {
+    color: 'warn',
+    tag: 'Layer 4 · MCP Servers',
+    title: 'Domain Tool Servers',
+    desc: '3 FastMCP servers chuyên biệt theo domain, mỗi server expose tool riêng qua @mcp.tool() decorator. Giao tiếp qua stdio transport — được spawn như subprocess bởi connect_to_mcp() ở layer trên.',
+    comps: [
+      {name: 'get_alert(state)', cls: 'warn', role: 'Fetch weather alerts từ NWS API cho một US state'},
+      {name: 'get_forecast(lat, lon)', cls: 'warn', role: 'Fetch 5-period weather forecast theo tọa độ'},
+      {name: 'notion_search(query)', cls: 'warn', role: 'Full-text search Notion pages/databases'},
+      {name: 'notion_query_database()', cls: 'warn', role: 'Query Notion DB với optional filter'},
+      {name: 'notion_get_page_content()', cls: 'warn', role: 'Fetch all blocks của một Notion page (paginated)'},
+      {name: 'search_pdf(query)', cls: 'warn', role: 'FAISS similarity search trên PDF documents, top-4'},
+    ]
+  },
+  data: {
+    color: 'gray',
+    tag: 'Layer 5 · Data',
+    title: 'Vector Store',
+    desc: 'One-time ingestion pipeline và persistent vector store cho Knowledge Base agent. PDF được chunk, embed bằng text-embedding-3-small, lưu vào FAISS. knowledge_base_server.py load DB này khi startup.',
+    comps: [
+      {name: 'ingest_pdf()', cls: 'gray', role: 'PDF → chunks → embeddings → FAISS save (one-time setup)'},
+      {name: 'pdf_metadata()', cls: 'gray', role: 'MCP resource: metadata về document source'},
+      {name: 'vectorstores/pdf_faiss/', cls: 'gray', role: 'Persisted FAISS index, loaded by knowledge_base_server'},
+    ]
+  }
+};
+
+function selectLayer(el) {
+  document.querySelectorAll('.layer-box').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const d = LAYERS[el.dataset.id];
+  if (!d) return;
+  const colorMap = {blue:'var(--p-blue)',green:'var(--p-green)',purple:'var(--p-purple)',warn:'var(--p-warn)',gray:'var(--p-gray)'};
+  const color = colorMap[d.color] || 'var(--text2)';
+  document.getElementById('arch-detail').innerHTML = `
+    <div class="detail-tag" style="color:${color}">${d.tag}</div>
+    <div class="detail-title">${d.title}</div>
+    <div class="detail-desc">${d.desc}</div>
+    <div class="detail-comps">
+      ${d.comps.map(c=>`
+        <div class="detail-comp">
+          <span class="detail-comp-name ${c.cls}">${c.name}</span>
+          <span class="detail-comp-role">${c.role}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function switchWf(btn, panelId) {
+  document.querySelectorAll('.wf-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.wf-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+document.querySelector('.layer-box')?.click();
+</script>
+</body>
+</html>

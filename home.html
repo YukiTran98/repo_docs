@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repo Docs Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f4f0; --bg2:#ffffff; --bg3:#eeecea; --bg4:#e4e2de;
+  --line:rgba(0,0,0,0.07); --line2:rgba(0,0,0,0.11);
+  --text:#1a1917; --text2:#5a5750; --text3:#9a978f;
+  --accent:#4e6b9e;
+  --accent-bg:rgba(78,107,158,0.09);
+  --accent-bd:rgba(78,107,158,0.28);
+  --accent2:#3d7a60;
+  --accent2-bg:rgba(61,122,96,0.09);
+  --accent2-bd:rgba(61,122,96,0.28);
+  --accent3:#7a4e8a;
+  --accent3-bg:rgba(122,78,138,0.09);
+  --accent3-bd:rgba(122,78,138,0.28);
+  --warn:#8a6030;
+  --warn-bg:rgba(138,96,48,0.09);
+  --warn-bd:rgba(138,96,48,0.28);
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Sora',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;font-size:14px;}
+.wrap{max-width:1060px;margin:0 auto;padding:52px 28px 120px;}
+
+/* ── Header ── */
+.hdr{margin-bottom:52px;padding-bottom:36px;border-bottom:1px solid var(--line);}
+.hdr-eyebrow{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;}
+.hdr h1{font-size:2.1rem;font-weight:600;letter-spacing:-0.03em;color:var(--text);margin-bottom:10px;}
+.hdr h1 span{color:var(--accent);}
+.hdr-sub{font-size:14px;color:var(--text2);max-width:560px;line-height:1.75;}
+.hdr-stats{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;}
+.stat-pill{font-family:var(--mono);font-size:11px;color:var(--text3);}
+.stat-pill b{color:var(--text);font-weight:500;}
+
+/* ── Reload button ── */
+.reload-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 13px;border-radius:7px;
+  background:var(--bg3);border:1px solid var(--line2);
+  font-family:var(--mono);font-size:11px;color:var(--text3);
+  cursor:pointer;transition:background 0.1s,color 0.1s;
+  margin-top:18px;
+}
+.reload-btn:hover{background:var(--bg4);color:var(--text);}
+.reload-btn.spinning .reload-icon{display:inline-block;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.reload-sep{opacity:0.35;margin:0 2px;}
+#autoCountdown{opacity:0.6;}
+
+/* ── Section label ── */
+.section-label{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;}
+
+/* ── Tag filter bar ── */
+.filter-section{margin-bottom:24px;}
+.filter-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.filter-all{
+  font-family:var(--mono);font-size:12px;font-weight:500;
+  padding:5px 16px;border-radius:20px;
+  border:1px solid var(--line2);background:var(--text);color:var(--bg2);
+  cursor:pointer;transition:all 0.12s;
+}
+.filter-all.inactive{background:var(--bg3);color:var(--text2);border-color:var(--line2);}
+.filter-all.inactive:hover{background:var(--bg4);color:var(--text);}
+.filter-tag{
+  font-family:var(--mono);font-size:12px;font-weight:500;
+  padding:5px 16px;border-radius:20px;
+  border:1px solid;
+  cursor:pointer;transition:opacity 0.12s, transform 0.1s;
+}
+.filter-tag:hover{opacity:0.85;transform:translateY(-1px);}
+.filter-tag.inactive{opacity:0.45;}
+.filter-tag.inactive:hover{opacity:0.75;}
+
+/* ── Grid ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;}
+.repo-card.hidden{display:none;}
+
+/* ── Repo Card ── */
+.repo-card{
+  background:var(--bg2);
+  border:1px solid var(--line2);
+  border-radius:12px;
+  overflow:hidden;
+  transition:box-shadow 0.15s,border-color 0.15s,transform 0.15s;
+  cursor:pointer;
+  display:flex;flex-direction:column;
+}
+.repo-card:hover{
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  border-color:rgba(78,107,158,0.35);
+  transform:translateY(-2px);
+}
+.repo-card.expanded{
+  border-color:rgba(78,107,158,0.45);
+  box-shadow:0 6px 24px rgba(78,107,158,0.10);
+  transform:none;
+}
+
+.card-main{padding:22px 22px 18px;flex:1;}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.card-name{font-size:1rem;font-weight:600;color:var(--text);letter-spacing:-0.02em;}
+.version-badge{
+  font-family:var(--mono);font-size:10px;
+  color:var(--accent);background:var(--accent-bg);
+  border:1px solid var(--accent-bd);
+  padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0;
+}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:14px;min-height:40px;}
+.card-meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.stack-tag{
+  font-family:var(--mono);font-size:10px;
+  color:var(--text3);background:var(--bg3);
+  border:1px solid var(--line);
+  padding:2px 8px;border-radius:3px;
+}
+.card-stats{
+  display:flex;gap:16px;
+  font-family:var(--mono);font-size:11px;color:var(--text3);
+  padding-top:12px;border-top:1px solid var(--line);
+}
+
+/* ── Changelog strip (bottom of main) ── */
+.card-changelog-strip{
+  padding:9px 22px;
+  background:var(--bg3);
+  border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:var(--text2);
+  display:flex;align-items:center;gap:8px;
+}
+.strip-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);flex-shrink:0;}
+.strip-label{color:var(--text3);}
+
+/* ── Expand toggle icon ── */
+.card-toggle{
+  display:flex;align-items:center;justify-content:center;
+  padding:8px 22px;
+  border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:var(--text3);
+  gap:6px;user-select:none;
+  background:transparent;
+  transition:background 0.1s;
+}
+.card-toggle:hover{background:var(--bg3);}
+.toggle-arrow{transition:transform 0.2s;display:inline-block;}
+.repo-card.expanded .toggle-arrow{transform:rotate(180deg);}
+
+/* ── Actions (3 buttons) ── */
+.card-actions{
+  display:none;
+  padding:14px 22px 18px;
+  border-top:1px solid var(--line2);
+  gap:8px;
+  flex-direction:column;
+}
+.repo-card.expanded .card-actions{display:flex;}
+
+.btn{
+  width:100%;display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:8px;
+  font-family:var(--sans);font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid;
+  transition:background 0.12s,border-color 0.12s;
+  text-decoration:none;
+}
+.btn-icon{font-size:13px;width:18px;text-align:center;flex-shrink:0;}
+.btn-label{flex:1;}
+.btn-arr{font-size:11px;color:inherit;opacity:0.5;margin-left:auto;}
+
+.btn-changelog{background:var(--accent3-bg);border-color:var(--accent3-bd);color:var(--accent3);}
+.btn-changelog:hover{background:rgba(122,78,138,0.16);}
+.btn-html{background:var(--accent-bg);border-color:var(--accent-bd);color:var(--accent);}
+.btn-html:hover{background:rgba(78,107,158,0.16);}
+.btn-func{background:var(--accent2-bg);border-color:var(--accent2-bd);color:var(--accent2);}
+.btn-func:hover{background:rgba(61,122,96,0.16);}
+
+/* ── Modal (changelog) ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(20,18,15,0.55);backdrop-filter:blur(3px);
+  z-index:100;align-items:flex-start;justify-content:center;
+  padding:48px 20px;overflow-y:auto;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--bg2);border:1px solid var(--line2);
+  border-radius:14px;width:100%;max-width:640px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.18);
+  overflow:hidden;margin:auto;
+}
+.modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:1px solid var(--line2);
+  background:var(--bg3);
+}
+.modal-hdr-left{}
+.modal-title{font-size:13px;font-weight:600;color:var(--text);}
+.modal-subtitle{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px;}
+.modal-close{
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg4);border:1px solid var(--line2);border-radius:6px;
+  cursor:pointer;font-size:15px;color:var(--text2);
+  transition:background 0.1s;flex-shrink:0;
+}
+.modal-close:hover{background:var(--line2);}
+.modal-body{padding:20px 24px 28px;max-height:65vh;overflow-y:auto;}
+
+/* ── Changelog entries ── */
+.cl-entry{
+  display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:flex-start;
+  padding:10px 0;border-bottom:1px solid var(--line);
+}
+.cl-entry:last-child{border-bottom:none;}
+.cl-tag{
+  font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;
+  white-space:nowrap;margin-top:1px;font-weight:500;
+}
+.cl-tag.update{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bd);}
+.cl-tag.init{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd);}
+.cl-tag.fix{background:var(--accent2-bg);color:var(--accent2);border:1px solid var(--accent2-bd);}
+.cl-tag.refactor{background:var(--accent3-bg);color:var(--accent3);border:1px solid var(--accent3-bd);}
+.cl-tag.breaking{background:#f5e0e0;color:#8a3030;border:1px solid rgba(138,48,48,0.3);}
+.cl-date{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap;margin-top:2px;}
+.cl-right{}
+.cl-note{font-size:13px;color:var(--text);font-weight:500;margin-bottom:4px;}
+.cl-details{list-style:none;padding:0;margin:0;}
+.cl-details li{font-size:12px;color:var(--text2);line-height:1.6;padding-left:12px;position:relative;}
+.cl-details li::before{content:'·';position:absolute;left:0;color:var(--text3);}
+
+/* ── Analyze modal ── */
+.analyze-field{margin-bottom:16px;}
+.analyze-field label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:6px;}
+.analyze-field input{width:100%;padding:9px 12px;border:1px solid var(--line2);border-radius:7px;background:var(--bg);font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
+.analyze-field input:focus{border-color:var(--accent-bd);}
+.analyze-run-btn{width:100%;padding:10px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.analyze-run-btn:hover{opacity:0.88;}
+.analyze-run-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.analyze-log{margin-top:14px;background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:12px;font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.7;max-height:220px;overflow-y:auto;white-space:pre-wrap;display:none;}
+.analyze-status{margin-top:10px;font-family:var(--mono);font-size:11px;text-align:center;}
+.analyze-status.running{color:var(--accent);}
+.analyze-status.done{color:var(--accent2);}
+.analyze-status.error{color:var(--warn);}
+
+/* ── Loading / Error states ── */
+.state-loading,.state-error{
+  grid-column:1/-1;text-align:center;padding:60px 20px;
+  font-family:var(--mono);font-size:12px;color:var(--text3);
+}
+.state-error{color:var(--warn);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="hdr-eyebrow">loitv2 / data_science</div>
+    <h1>Repo <span>Docs</span> Hub</h1>
+    <div class="hdr-sub">Tổng hợp documentation của tất cả repositories trong workspace. Chọn một repo để xem HTML doc, function reference, hoặc lịch sử thay đổi.</div>
+    <div class="hdr-stats" id="hubStats">
+      <div class="stat-pill"><span style="opacity:0.5">// loading...</span></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;">
+      <button class="reload-btn" id="reloadBtn" onclick="reload()" style="margin-top:0">
+        <span class="reload-icon">↺</span> Reload repos
+        <span class="reload-sep">·</span>
+        <span id="autoCountdown">30s</span>
+      </button>
+      <button class="reload-btn" onclick="openAnalyzeModal()" style="margin-top:0;background:var(--accent-bg);border-color:var(--accent-bd);color:var(--accent);">
+        + Analyze new repo
+      </button>
+    </div>
+  </div>
+
+  <div class="section-label" id="gridLabel">— repositories</div>
+  <div class="filter-section" id="filterSection" style="display:none">
+    <div class="filter-label">filter by tag</div>
+    <div class="filter-bar" id="filterBar"></div>
+  </div>
+  <div class="grid" id="repoGrid">
+    <div class="state-loading">// đang tải repos.json...</div>
+  </div>
+
+</div>
+
+<!-- Modal: analyze new repo -->
+<div class="modal-overlay" id="analyzeOverlay" onclick="closeAnalyzeOnBg(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-hdr-left">
+        <div class="modal-title">Analyze new repo</div>
+        <div class="modal-subtitle">Agent sẽ scan, phân tích và sinh docs tự động</div>
+      </div>
+      <div class="modal-close" onclick="closeAnalyzeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="analyze-field">
+        <label>Repo path (tuyệt đối)</label>
+        <input id="analyzeRepoPath" type="text" placeholder="/home/loitv/loitv2/data_science/ai/my-repo" />
+      </div>
+      <div class="analyze-field">
+        <label>Tên hiển thị (để trống = tên thư mục)</label>
+        <input id="analyzeRepoName" type="text" placeholder="my-repo" />
+      </div>
+      <button class="analyze-run-btn" id="analyzeRunBtn" onclick="runAnalyze()">Run Agent</button>
+      <div class="analyze-status" id="analyzeStatus"></div>
+      <div class="analyze-log" id="analyzeLog"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: changelog viewer -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-hdr-left">
+        <div class="modal-title" id="modalTitle">Changelog</div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+      </div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   ANALYZE MODAL
+   ══════════════════════════════════════════ */
+let analyzePolling = null;
+
+function openAnalyzeModal() {
+  document.getElementById('analyzeOverlay').classList.add('open');
+  document.getElementById('analyzeRepoPath').focus();
+}
+function closeAnalyzeModal() {
+  document.getElementById('analyzeOverlay').classList.remove('open');
+  clearInterval(analyzePolling);
+  analyzePolling = null;
+}
+function closeAnalyzeOnBg(e) {
+  if (e.target === document.getElementById('analyzeOverlay')) closeAnalyzeModal();
+}
+
+async function runAnalyze() {
+  const repoPath = document.getElementById('analyzeRepoPath').value.trim();
+  const repoName = document.getElementById('analyzeRepoName').value.trim();
+  if (!repoPath) return;
+
+  const btn    = document.getElementById('analyzeRunBtn');
+  const status = document.getElementById('analyzeStatus');
+  const log    = document.getElementById('analyzeLog');
+
+  btn.disabled = true;
+  btn.textContent = 'Starting...';
+  status.className = 'analyze-status running';
+  status.textContent = '⟳ Đang khởi động agent...';
+  log.style.display = 'none';
+  log.textContent = '';
+
+  const res = await fetch('/analyze', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({repo_path: repoPath, repo_name: repoName}),
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    status.className = 'analyze-status error';
+    status.textContent = '✕ ' + (data.error || 'Lỗi không xác định');
+    btn.disabled = false;
+    btn.textContent = 'Run Agent';
+    return;
+  }
+
+  const jobId = data.job_id;
+  btn.textContent = 'Running...';
+  log.style.display = 'block';
+
+  analyzePolling = setInterval(async () => {
+    const r = await fetch(`/analyze/status/${jobId}`);
+    const j = await r.json();
+    log.textContent = j.log || '';
+    log.scrollTop = log.scrollHeight;
+
+    if (j.status === 'done') {
+      clearInterval(analyzePolling);
+      analyzePolling = null;
+      status.className = 'analyze-status done';
+      status.textContent = '✓ Hoàn thành!';
+      btn.disabled = false;
+      btn.textContent = 'Run Agent';
+      // Reload grid
+      setTimeout(() => { reload(); closeAnalyzeModal(); }, 1500);
+    } else if (j.status === 'error') {
+      clearInterval(analyzePolling);
+      analyzePolling = null;
+      status.className = 'analyze-status error';
+      status.textContent = '✕ Agent gặp lỗi — xem log bên dưới';
+      btn.disabled = false;
+      btn.textContent = 'Run Agent';
+    }
+  }, 2000);
+}
+
+/* ══════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════ */
+let REPOS = [];
+let expandedId = null;
+let activeTag = null; // null = show all
+
+/* ══════════════════════════════════════════
+   TAG COLOR PALETTE
+   Mỗi tag được assign màu nhất quán dựa trên hash
+   ══════════════════════════════════════════ */
+const TAG_PALETTE = [
+  {bg:'#dde6f2', bd:'rgba(61,90,138,0.35)',  fg:'#3d5a8a'},
+  {bg:'#d8eee6', bd:'rgba(46,112,88,0.35)',  fg:'#2e7058'},
+  {bg:'#e4dff2', bd:'rgba(91,72,144,0.35)',  fg:'#5b4890'},
+  {bg:'#f0e8d5', bd:'rgba(122,90,32,0.35)',  fg:'#7a5a20'},
+  {bg:'#f2dde0', bd:'rgba(138,61,70,0.35)',  fg:'#8a3d46'},
+  {bg:'#ddf0ee', bd:'rgba(32,110,106,0.35)', fg:'#206e6a'},
+  {bg:'#e8e6e2', bd:'rgba(80,76,70,0.35)',   fg:'#504c46'},
+];
+
+function tagColor(tag) {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  return TAG_PALETTE[h % TAG_PALETTE.length];
+}
+
+/* ══════════════════════════════════════════
+   BOOT — fetch repos.json
+   ══════════════════════════════════════════ */
+async function boot() {
+  try {
+    const res = await fetch('repos.json?_=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    REPOS = await res.json();
+    renderHubStats();
+    renderGrid();
+  } catch (e) {
+    document.getElementById('repoGrid').innerHTML =
+      `<div class="state-error">// Không thể tải repos.json<br>${e.message}<br><br>Chạy: <b>python3 generate.py</b> rồi thử lại.<br>Hoặc dùng <b>./start.sh</b> để khởi động đúng cách.</div>`;
+    document.getElementById('hubStats').innerHTML =
+      `<div class="stat-pill" style="color:var(--warn)">// repos.json not found</div>`;
+  }
+}
+
+/* ══════════════════════════════════════════
+   HEADER STATS
+   ══════════════════════════════════════════ */
+function renderHubStats() {
+  const totalFn = REPOS.reduce((s, r) => s + (r.stats?.functions ?? 0), 0);
+  const totalFiles = REPOS.reduce((s, r) => s + (r.stats?.files ?? 0), 0);
+  const latest = REPOS.flatMap(r => r.changelog).map(c => c.date).sort().at(-1) ?? '—';
+  document.getElementById('hubStats').innerHTML = `
+    <div class="stat-pill"><b>${REPOS.length}</b> repo</div>
+    <div class="stat-pill"><b>${totalFiles}</b> files tracked</div>
+    <div class="stat-pill"><b>${totalFn}</b> functions mapped</div>
+    <div class="stat-pill">Last updated <b>${latest}</b></div>
+  `;
+}
+
+/* ══════════════════════════════════════════
+   FILTER BAR
+   ══════════════════════════════════════════ */
+function renderFilterBar() {
+  const section = document.getElementById('filterSection');
+  const bar = document.getElementById('filterBar');
+  const allTags = [...new Set(REPOS.flatMap(r => r.tags ?? []))].sort();
+
+  if (!allTags.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  bar.innerHTML = `
+    <button class="filter-all ${activeTag ? 'inactive' : ''}" onclick="setFilter(null)">All</button>
+    ${allTags.map(t => {
+      const c = tagColor(t);
+      const isActive = activeTag === t;
+      return `<button class="filter-tag ${isActive ? 'active' : ''}"
+        style="${isActive
+          ? `background:${c.fg};border-color:${c.fg};color:#fff`
+          : `border-color:${c.bd};color:${c.fg};background:${c.bg}`}"
+        onclick="setFilter('${esc(t)}')">${esc(t)}</button>`;
+    }).join('')}`;
+}
+
+function setFilter(tag) {
+  activeTag = tag;
+  renderFilterBar();
+  applyFilter();
+}
+
+function applyFilter() {
+  document.querySelectorAll('.repo-card').forEach(card => {
+    if (!activeTag) { card.classList.remove('hidden'); return; }
+    const repo = REPOS.find(r => r.id === card.id.replace('card-', ''));
+    const has = (repo?.tags ?? []).includes(activeTag);
+    card.classList.toggle('hidden', !has);
+  });
+}
+
+/* ══════════════════════════════════════════
+   GRID RENDER
+   ══════════════════════════════════════════ */
+function renderGrid() {
+  const grid = document.getElementById('repoGrid');
+  if (!REPOS.length) {
+    grid.innerHTML = '<div class="state-loading">// no repos found</div>';
+    return;
+  }
+  grid.innerHTML = REPOS.map(r => repoCardHTML(r)).join('');
+  renderFilterBar();
+  applyFilter();
+}
+
+function repoCardHTML(r) {
+  const latest = r.changelog?.[0] ?? {};
+  const stackTags = (r.stack ?? []).map(s => `<span class="stack-tag">${esc(s)}</span>`).join('');
+  const stats = r.stats ?? { files: 0, lines: 0, functions: 0 };
+
+  const btnChangelog = r.changelogFile
+    ? `<button class="btn btn-changelog" onclick="event.stopPropagation();openChangelog('${r.id}')">
+        <span class="btn-icon">⏱</span><span class="btn-label">Changelog</span><span class="btn-arr">↗</span>
+       </button>`
+    : '';
+
+  const btnHtml = r.htmlFile
+    ? `<a class="btn btn-html" href="viewer.html?type=html&file=${enc(r.htmlFile)}&title=${enc(r.name)}" onclick="event.stopPropagation()">
+        <span class="btn-icon">⎋</span><span class="btn-label">HTML Doc</span><span class="btn-arr">→</span>
+       </a>`
+    : '';
+
+  const btnFunc = r.functionsFile
+    ? `<a class="btn btn-func" href="viewer.html?type=functions&file=${enc(r.functionsFile)}&title=${enc(r.name)}" onclick="event.stopPropagation()">
+        <span class="btn-icon">ƒ</span><span class="btn-label">Functions</span><span class="btn-arr">→</span>
+       </a>`
+    : '';
+
+  return `
+  <div class="repo-card" id="card-${r.id}">
+    <div class="card-main" onclick="toggleCard('${r.id}')">
+      <div class="card-header">
+        <div class="card-name">${esc(r.name)}</div>
+        ${latest.date ? `<div class="version-badge">${latest.date}</div>` : ''}
+      </div>
+      <div class="card-desc">${esc(r.description || '—')}</div>
+      <div class="card-meta">${stackTags || '<span class="stack-tag">—</span>'}</div>
+      <div class="card-stats">
+        <span>${stats.files} files</span>
+        <span>${stats.lines} lines</span>
+        <span>${stats.functions} fn</span>
+      </div>
+    </div>
+
+    ${latest.note ? `
+    <div class="card-changelog-strip" onclick="toggleCard('${r.id}')">
+      <div class="strip-dot"></div>
+      <span class="strip-label">latest —</span>
+      <span>${latest.date ?? ''} · ${esc(latest.note)}</span>
+    </div>` : ''}
+
+    <div class="card-toggle" onclick="toggleCard('${r.id}')">
+      <span class="toggle-arrow">▾</span>
+      <span id="toggle-label-${r.id}">lihat docs</span>
+    </div>
+
+    <div class="card-actions">
+      ${btnChangelog}
+      ${btnHtml}
+      ${btnFunc}
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════
+   TOGGLE CARD
+   ══════════════════════════════════════════ */
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  const label = document.getElementById('toggle-label-' + id);
+  const isExpanded = card.classList.toggle('expanded');
+  label.textContent = isExpanded ? 'tutup' : 'lihat docs';
+}
+
+/* ══════════════════════════════════════════
+   MODAL — changelog
+   ══════════════════════════════════════════ */
+function openChangelog(repoId) {
+  const repo = REPOS.find(r => r.id === repoId);
+  if (!repo) return;
+
+  document.getElementById('modalTitle').textContent = repo.name + ' — Changelog';
+  document.getElementById('modalSubtitle').textContent =
+    repo.changelog.length + ' entries · ' + (repo.changelogFile ?? '');
+
+  const entries = repo.changelog.map(c => {
+    const details = (c.details ?? []).map(d =>
+      `<li>${esc(d)}</li>`
+    ).join('');
+    return `
+    <div class="cl-entry">
+      <span class="cl-tag ${c.tag}">${c.tag}</span>
+      <span class="cl-date">${c.date}</span>
+      <div class="cl-right">
+        <div class="cl-note">${esc(c.note)}</div>
+        ${details ? `<ul class="cl-details">${details}</ul>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modalBody').innerHTML = entries ||
+    '<div style="font-family:var(--mono);font-size:12px;color:var(--text3);padding:20px 0">// no entries found</div>';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ══════════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════════ */
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function enc(s) { return encodeURIComponent(s || ''); }
+
+/* ══════════════════════════════════════════
+   RELOAD + AUTO-REFRESH (30s)
+   ══════════════════════════════════════════ */
+const AUTO_INTERVAL = 30;
+let _countdown = AUTO_INTERVAL;
+let _countdownTimer = null;
+
+function _startCountdown() {
+  clearInterval(_countdownTimer);
+  _countdown = AUTO_INTERVAL;
+  _updateCountdownDisplay();
+  _countdownTimer = setInterval(async () => {
+    _countdown--;
+    _updateCountdownDisplay();
+    if (_countdown <= 0) {
+      await reload(true); // silent auto-reload
+    }
+  }, 1000);
+}
+
+function _updateCountdownDisplay() {
+  const el = document.getElementById('autoCountdown');
+  if (el) el.textContent = _countdown + 's';
+}
+
+async function reload(silent = false) {
+  const btn = document.getElementById('reloadBtn');
+  if (!silent) {
+    btn.classList.add('spinning');
+    btn.disabled = true;
+  }
+  await boot();
+  if (!silent) {
+    btn.classList.remove('spinning');
+    btn.disabled = false;
+  }
+  _startCountdown(); // reset countdown sau mỗi lần reload
+}
+
+/* ══════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════ */
+boot().then(() => _startCountdown());
+</script>
+</body>
+</html>
