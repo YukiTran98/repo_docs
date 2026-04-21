@@ -22,6 +22,49 @@ SKILLS_DIR = Path(__file__).parent / "skills"
 AGENT_DIR = Path(__file__).parent
 
 
+def build_model():
+    if key := os.environ.get("ANTHROPIC_API_KEY"):
+        from strands.models.anthropic import AnthropicModel
+        print("[provider] Anthropic")
+        return AnthropicModel(
+            model_id="claude-haiku-4-5-20251001",
+            params={"max_tokens": 16000},
+        )
+
+    if key := os.environ.get("OPENAI_API_KEY"):
+        print("[provider] OpenAI")
+        return OpenAIModel(
+            client_args={"api_key": key},
+            model_id="gpt-4o-mini",
+            params={"max_tokens": 16000},
+        )
+
+    if key := os.environ.get("GOOGLE_API_KEY"):
+        print("[provider] Google Gemini")
+        return OpenAIModel(
+            client_args={
+                "api_key": key,
+                "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            },
+            model_id="gemini-2.0-flash",
+            params={"max_tokens": 16000},
+        )
+
+    if key := os.environ.get("OPENROUTER_API_KEY"):
+        print("[provider] OpenRouter")
+        return OpenAIModel(
+            client_args={
+                "api_key": key,
+                "base_url": "https://openrouter.ai/api/v1",
+            },
+            model_id="anthropic/claude-haiku-4-5",
+            params={"max_tokens": 16000},
+        )
+
+    print("[ERROR] Không tìm thấy API key nào. Cần ít nhất một trong: ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY, OPENROUTER_API_KEY")
+    sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("repo_path", help="Đường dẫn tới repo cần phân tích")
@@ -36,17 +79,8 @@ def main():
     repo_name = args.name or repo_path.name
     out_dir = str(AGENT_DIR.parent / "docs" / repo_name)
 
-    model = OpenAIModel(
-        client_args={
-            "api_key": os.environ["OPENROUTER_API_KEY"],
-            "base_url": "https://openrouter.ai/api/v1",
-        },
-        model_id="anthropic/claude-haiku-4-5",
-        params={"max_tokens": 16000},
-    )
-
     agent = Agent(
-        model=model,
+        model=build_model(),
         tools=[shell, file_write, editor],
         plugins=[AgentSkills(skills=[str(SKILLS_DIR)])],
         system_prompt=(
